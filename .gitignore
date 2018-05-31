@@ -1,0 +1,3 @@
+# Ignore the sql table and log file
+*.sqlt
+*.log
