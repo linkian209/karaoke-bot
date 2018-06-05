@@ -1,3 +1,4 @@
+import logging
 
 # Utility Functions
 
@@ -10,13 +11,9 @@ def usage():
        -t
        --token           App Token used for discord\n
        \b\bOptional Options:
-       --backup-count    Number of log files to keep. Default is 5
        -c
        --command-prefix  Command prefix to respond to in Discord. Default is "!"
-       -f
-       --file            Log file. Defaults to "log.txt" in the current
-                         working directory.
-       --max-bytes       Number of bytes to keep in one file. Defaults to 10MB.'''
+    '''
 )
 
 def make_queue_string(queue):
