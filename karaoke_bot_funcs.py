@@ -24,9 +24,13 @@ def make_queue_string(queue):
     order += 1
     cur_queue += '{}. {}'.format(order, item['user'])
     if item['song'] is not None:
-      cur_queue += ' singing {}\n'
+      cur_queue += ' singing {}\n'.format(item['song'])
     else:
       cur_queue += '\n'
+
+  # If the queue was empty, report that!
+  if cur_queue == '':
+    cur_queue = "Empty!"
 
   return cur_queue
 

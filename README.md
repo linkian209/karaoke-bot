@@ -6,3 +6,4 @@ Since I designed this bot to run on a Raspberry Pi, I have decided to use SQLite
 
 # Requirements
 * discord.py
+  * pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
