@@ -7,6 +7,7 @@ import sqlite3
 import signal
 import datetime
 import asyncio
+import configparser
 from discord.ext import commands
 from karaoke_bot_funcs import *
 
@@ -16,7 +17,27 @@ startup_extensions = ["modules.karaoke_bot_commands",
 
 # Main Function
 def main():
-  # Command line arguments
+  # Set defaults
+  command_prefix = '!'
+  token = None
+
+  # First parse config
+  config = configparser.ConfigParser()
+  config.read('karaoke_bot.conf')
+
+  for section in config.sections():
+    if section == 'General':
+      for item in config[section]:
+        if item == 'command_prefix':
+          command_prefix = config[section][item]
+        elif item == 'token':
+          token = config[section][item]
+        else:
+          print('Unrecognized item: {}'.format(item))
+          usage()
+          sys.exit(2)
+
+  # Command line arguments trump config
   # Get started
   try:
     flags = 'ht:c:'
@@ -29,10 +50,6 @@ def main():
     sys.exit(2)
 
   # Parse these args
-  # Set defaults
-  command_prefix = '!'
-  token = None
-
   # Loop through options
   for o,a in opts:
     if o in ('-h', '--help'):

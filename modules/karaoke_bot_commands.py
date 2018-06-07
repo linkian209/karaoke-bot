@@ -56,27 +56,37 @@ class KaraokeBotCommands():
     commands = [
       'info',
       'help',
-      'add [Username] (Song Name)',
-      'remove [Username]',
+      'addMe (Song Name)',
+      'removeMe',
       'next',
-      'skipTop',
-      'color',
-      'cut',
       'clear',
       'showQueue'
+    ]
+
+    mod_commands = [
+      'add [Username] (Song Name)',
+      'remove [Username]',
+      'skipTop',
+      'color',
+      'cut'
     ]
 
     descriptions = [
       '\tDisplays information about the bot. Ex: `{}info`',
       '\tDisplays the list of commands. Ex: `{}help`',
-      '\tAdd a user to the self.queue. Can optionally add the song name. Ex: `{}add user123 "Uptown Girl"`',
-      '\tRemove a user from the self.queue. Ex: `{}remove user123`',
-      '\tProgress to the next user in the self.queue. Also shows who is on deck. Ex: `{}next`',
-      '\t*Mod Only* Moves supplied username to front of self.queue. Ex: `{}skipTop user456`',
-      '\t*Mod Only* Sets color for bot embeds. Ex: `{}color 0xDADADA`',
-      '\t*Mod Only* Removes user at supplied index from the self.queue. `{}cut 3`',
+      '\tAdds self to queue. Can optionally add the song name. Ex: `{}addMe "Uptown Girl"`',
+      '\tRemoves self from the queue. Ex: `{}removeMe`',
+      '\tProgress to the next user in the queue. Also shows who is on deck. Ex: `{}next`',
       '\tClears the queue. Ex: `{}clear`',
       '\tDisplays current queue. Ex: `{}showQueue`'
+    ]
+
+    mod_descriptions = [
+      '\t*Mod Only* Add a user to the queue. Can optionally add the song name. Ex: `{}add user123 "Uptown Girl"`',
+      '\t*Mod Only* Remove a user from the queue. Ex: `{}remove user123`',
+      '\t*Mod Only* Moves supplied username to front of queue. Ex: `{}skipTop user456`',
+      '\t*Mod Only* Sets color for bot embeds. Ex: `{}color 0xDADADA`',
+      '\t*Mod Only* Removes user at supplied index from the self.queue. `{}cut 3`'
     ]
 
     # Create the response
@@ -90,13 +100,23 @@ class KaraokeBotCommands():
       embed.add_field(name=cur_command, value=cur_description, inline=False)
       count += 1
 
+    # If user is a mod, send the mod commands
+    if 'Mod' in [x.name for x in ctx.message.author.roles]:
+      count = 0
+      for command in mod_commands:
+        cur_command = command
+        cur_description = mod_descriptions[count].format(self.bot.command_prefix)
+        embed.add_field(name=cur_command, value=cur_description, inline=False)
+        count += 1
+
     # Return
-    await ctx.send(embed=embed)
+    await ctx.message.author.send(embed=embed)
   # End !help
 
   # !add
   # Add a user (with an optional song) to the self.queue
   @commands.command(pass_context=True)
+  @commands.has_role('Mod')
   async def add(self, ctx, user: str, song: str=None):
     # Add person to self.queue, if they aren't already in line
     in_queue = False
@@ -129,6 +149,7 @@ class KaraokeBotCommands():
   # !remove
   # Remove user from self.queue
   @commands.command(pass_context=True)
+  @commands.has_role('Mod')
   async def remove(self, ctx, user: str):
     # If the user is in the self.queue, remove them
     for item in self.queue:
@@ -382,6 +403,64 @@ class KaraokeBotCommands():
 
     await ctx.send(embed=embed)
   # End !clear
+
+  # !addMe
+  # Adds author of message to the queue. Song can also be added
+  @commands.command(pass_context=True)
+  async def addMe(self, ctx, song: str=None):
+    # Get user
+    user = ctx.message.author.name
+
+    # Add person to self.queue, if they aren't already in line
+    in_queue = False
+    for item in self.queue:
+      if item['user'] == user:
+        in_queue = True
+        break
+
+    if not in_queue:
+      self.queue.append({'user': user, 'song': song})
+
+    # Make response
+    if not in_queue:
+      description = user
+
+      if song is not None:
+        description += ' will be singing {}'.format(song)
+    # If they are already in self.queue, alert them
+    else:
+      description = '{} is already in queue. Please wait your turn!'.format(user)
+
+    embed = discord.Embed(title='Adding User', description=description,
+                          color=self.embed_color)
+    embed.add_field(name='Current Order', value=make_queue_string(self.queue),
+                    inline=False)
+
+    await ctx.send(embed=embed)
+  # End !addMe
+
+  # !removeMe
+  # Removes author from queue
+  @commands.command(pass_context=True)
+  async def removeMe(self, ctx):
+    # Get User
+    user = ctx.message.author.name
+
+    # If the user is in the queue, remove them
+    for item in self.queue:
+      if item['user'] == user:
+        self.queue.remove(item)
+
+    # Create response
+    description = 'Removing user {} from queue'.format(user)
+    embed = discord.Embed(title='Removing user', description=description,
+                          color=self.embed_color)
+    embed.add_field(name='Current Order', value=make_queue_string(self.queue),
+                    inline=False)
+
+    await ctx.send(embed=embed)
+  # End !removeMe
+
 # End KaraokeBotCommands
 
 def setup(bot):
