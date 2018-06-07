@@ -1,0 +1,21 @@
+Bot is ready! Logged in as test-bot#7418
+Ignoring exception in command None:
+discord.ext.commands.errors.CommandNotFound: Command "skip" is not found
+Ignoring exception in command next:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.5/dist-packages/discord/ext/commands/core.py", line 62, in wrapped
+    ret = yield from coro(*args, **kwargs)
+  File "/users/discord/karaoke_bot/modules/karaoke_bot_commands.py", line 181, in next
+    cur_user = self.queue[0]
+IndexError: list index out of range
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.5/dist-packages/discord/ext/commands/bot.py", line 886, in invoke
+    yield from ctx.command.invoke(ctx)
+  File "/usr/local/lib/python3.5/dist-packages/discord/ext/commands/core.py", line 514, in invoke
+    yield from injected(*ctx.args, **ctx.kwargs)
+  File "/usr/local/lib/python3.5/dist-packages/discord/ext/commands/core.py", line 71, in wrapped
+    raise CommandInvokeError(e) from e
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: IndexError: list index out of range
