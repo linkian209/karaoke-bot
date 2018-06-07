@@ -1,3 +1,10 @@
+# Karaoke Bot Config File
+#
+# When replacing something in a {}, include the {}. For example:
+# command_prefix = {Your Command Prefix}
+# becomes
+# command_prefix = +
+
 [General]
-token = [Your Token]
-command_prefix = [Your Command Prefix]
+token = {Your Token}
+command_prefix = {Your Command Prefix}

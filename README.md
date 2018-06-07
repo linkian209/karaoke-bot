@@ -9,11 +9,14 @@ A systemctl service file is included for use. It requires screen to use, so you 
 
 To install it:
 1. Copy the file to /etc/systemd/system/ under the name discord_service@.service
-2. sudo systemctl enable discord_service@karaoke_bot
+2. `sudo systemctl enable discord_service@karaoke_bot`
 3. ???
 4. Profit
 
 systemctl should start the screen session up. You can attach to the screen session by typing `screen -r discord-karaoke_bot`. This will allow you to see the console output. If you wish to disconnect from the screen session while keeping it running, press `Ctrl+a` then `Ctrl+d`.
+
+# Configuration File
+The systemctl service does not provide command line arguments. You can utilize the configuration file to provide the arguments.
 
 # Requirements
 * discord.py
