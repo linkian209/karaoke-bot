@@ -1,3 +1,9 @@
 # Ignore the sql table and log file
 *.sqlt
-*.log
+*.txt
+*.conf
+screen*
+
+# But not requirements.txt or the logging conf
+!requirements.txt
+!logging.conf
