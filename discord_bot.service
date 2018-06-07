@@ -1,0 +1,18 @@
+[Unit]
+Description=Discord Bot %i
+After=network.target
+
+[Service]
+WorkingDirectory=/users/discord/%i
+User=discord
+Group=discord
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ExecStart=/bin/sh -c '/usr/bin/screen -L -DmS discord-%i /usr/bin/python %i.py'
+ExecStop=/bin/sh -c 'PID=$(pgrep "/usr/bin/python %i.py"); kill $PID'
+
+[Install]
+WantedBy=multi-user.target
