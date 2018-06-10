@@ -32,7 +32,7 @@ class KaraokeBotCommands():
   # Returns information about the bot, the author, and other techy stuff
   @commands.command(pass_context=True)
   async def info(self, ctx):
-    description = 'A Discord bot for running a karaoke self.queue'
+    description = 'A Discord bot for running a karaoke queue'
     embed = discord.Embed(title='Karaoke Bot', description=description,
                           color=self.embed_color)
     embed.add_field(name='Author', value='linkian209')
@@ -86,7 +86,7 @@ class KaraokeBotCommands():
       '\t*Mod Only* Remove a user from the queue. Ex: `{}remove user123`',
       '\t*Mod Only* Moves supplied username to front of queue. Ex: `{}skipTop user456`',
       '\t*Mod Only* Sets color for bot embeds. Ex: `{}color 0xDADADA`',
-      '\t*Mod Only* Removes user at supplied index from the self.queue. `{}cut 3`'
+      '\t*Mod Only* Removes user at supplied index from the queue. `{}cut 3`'
     ]
 
     # Create the response

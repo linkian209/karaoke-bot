@@ -13,7 +13,8 @@ from karaoke_bot_funcs import *
 
 # Extensions for the bot
 startup_extensions = ["modules.karaoke_bot_commands",
-                      "modules.karaoke_bot_events"]
+                      "modules.karaoke_bot_events",
+                      "modules.karaoke_bot_random"]
 
 # Main Function
 def main():
@@ -88,6 +89,7 @@ def main():
 
   # Once we get a signal to quit, logout then exit!
   bot.logout()
+  print('Exiting!')
   sys.exit(0)
 
 # Start script
