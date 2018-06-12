@@ -20,6 +20,8 @@ class KaraokeBotRandom():
 
     # List of emojis for various things
     self.clap_emojis = [':clap:', ':raised_hands:', ':pray:']
+    self.roses_emojis = [':rose:', ':bouquet:', ':candle:']
+    self.rainbow_emojis = [':rainbow:', ':unicorn:']
   # End init
 
   # !clap
@@ -50,6 +52,31 @@ class KaraokeBotRandom():
     # Return!
     await ctx.send(' '.join(response))
   # end !applause
+
+  # !roses
+  # Sends a bunch of roses
+  @commands.command(pass_context=True)
+  async def roses(self, ctx):
+    # Make response
+    response = [self.roses_emojis[randint(0, len(self.roses_emojis)-1)]
+                for i in range(15)]
+
+    # Return!
+    await ctx.send(' '.join(response))
+  # End !roses
+
+  # !rainbows
+  # Sends some rainbows and unicorns
+  @commands.command(pass_context=True)
+  async def rainbows(self, ctx):
+    # Make response
+    response = [self.rainbow_emojis[randint(0, len(self.rainbow_emojis)-1)]
+                for i in range(15)]
+
+    # Return!
+    await ctx.send(' '.join(response))
+  # End !rainbows
+
 
 # End KaraokeBotRandom
 
