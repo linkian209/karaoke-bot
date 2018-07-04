@@ -16,7 +16,7 @@ class KaraokeBotCommands():
   def __init__(self, bot):
     # The bot
     self.bot = bot
-    self.queue = []
+    self.queue = {}
 
     # Remove default help
     self.bot.remove_command('help')
@@ -39,9 +39,9 @@ class KaraokeBotCommands():
     embed.add_field(name='Source',
                     value='[Code](https://github.com/linkian209/karaoke-bot)')
     embed.add_field(name='Questions/Comments',
-                    value='[Email](mailto://linkian209@gmail.com)')
+                    value='[Email](mailto:linkian209@gmail.com)')
     embed.add_field(name='Add me to your server!',
-                    value='[Click Me!](https://discordapp.com/api/oauth2/authorize?client_id=451160132139614219&permissions=6144&scope=bot)')
+                    value='[Click Me!](https://discordapp.com/api/oauth2/authorize?client_id=464150248634449921&permissions=6144&scope=bot)')
 
     await ctx.send(embed=embed)
   # End !info
@@ -114,19 +114,28 @@ class KaraokeBotCommands():
   # End !help
 
   # !add
-  # Add a user (with an optional song) to the self.queue
+  # Add a user (with an optional song) to the queue
   @commands.command(pass_context=True)
   @commands.has_role('Mod')
   async def add(self, ctx, user: str, song: str=None):
-    # Add person to self.queue, if they aren't already in line
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
+    # Add person to queue, if they aren't already in line
     in_queue = False
-    for item in self.queue:
+    for item in self.queue[server][channel]:
       if item['user'] == user:
         in_queue = True
         break
 
     if not in_queue:
-      self.queue.append({'user': user, 'song': song})
+      self.queue[server][channel].append({'user': user, 'song': song})
 
     # Make response
     if not in_queue:
@@ -140,19 +149,29 @@ class KaraokeBotCommands():
 
     embed = discord.Embed(title='Adding User', description=description,
                           color=self.embed_color)
-    embed.add_field(name='Current Order', value=make_queue_string(self.queue),
+    embed.add_field(name='Current Order',
+                    value=make_queue_string(self.queue[server][channel]),
                     inline=False)
 
     await ctx.send(embed=embed)
   # End !add
 
   # !remove
-  # Remove user from self.queue
+  # Remove user from queue
   @commands.command(pass_context=True)
   @commands.has_role('Mod')
   async def remove(self, ctx, user: str):
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
     # If the user is in the self.queue, remove them
-    for item in self.queue:
+    for item in self.queue[server][channel]:
       if item['user'] == user:
         self.queue.remove(item)
 
@@ -160,7 +179,8 @@ class KaraokeBotCommands():
     description = 'Removing user {} from queue'.format(user)
     embed = discord.Embed(title='Removing user', description=description,
                           color=self.embed_color)
-    embed.add_field(name='Current Order', value=make_queue_string(self.queue),
+    embed.add_field(name='Current Order',
+                    value=make_queue_string(self.queue[server][channel]),
                     inline=False)
 
     await ctx.send(embed=embed)
@@ -170,21 +190,30 @@ class KaraokeBotCommands():
   # Advances the self.queue up one and displays who is on deck
   @commands.command(pass_context=True)
   async def next(self, ctx):
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
     # First check if there is anyone in the queue
-    if len(self.queue) is 0:
+    if len(self.queue[server][channel]) is 0:
       desc = 'There is currently no one in the queue!'
       embed = discord.Embed(title='Next Up', description=desc,
                             color=self.embed_color)
       await ctx.send(embed=embed)
 
     # Get current user and on deck user
-    cur_user = self.queue[0]
+    cur_user = self.queue[server][channel][0]
     on_deck = None
     if len(self.queue) > 1:
-      on_deck = self.queue[1]
+      on_deck = self.queue[server][channel][1]
 
     # Pop from self.queue
-    self.queue.remove(cur_user)
+    self.queue[server][channel].remove(cur_user)
 
     # Connect to database
     db_conn = sqlite3.connect(database_name)
@@ -192,44 +221,48 @@ class KaraokeBotCommands():
 
     # Update statistics on user
     # Check if the user exists
-    curs.execute('SELECT count(1) FROM users WHERE username = ?',
-                 (cur_user['user'],))
+    curs.execute('''SELECT count(1) FROM users
+                    WHERE username = ?
+                      AND server = ?''',
+                 (cur_user['user'], server))
     count = curs.fetchone()[0]
 
     # If the user exists, update their record
     if count is not 0:
       if cur_user['song'] is not None:
         # First Update user records
-        params = (cur_user['song'], datetime.now(), cur_user['user'])
+        params = (cur_user['song'], datetime.now(), cur_user['user'], server)
         curs.execute('''UPDATE users
                            SET last_song = ?,
                                last_date = ?,
                                times_sung = times_sung + 1
-                         WHERE username = ?''', params)
+                         WHERE username = ?
+                           AND server = ?''', params)
         db_conn.commit()
 
       else:
-        params = (datetime.now(), cur_user['user'])
+        params = (datetime.now(), cur_user['user'], server)
         curs.execute('''UPDATE users
                            SET last_date = ?,
                                times_sung = times_sung + 1
-                         WHERE username = ?''', params)
+                         WHERE username = ?
+                           AND server = ?''', params)
         db_conn.commit()
     # User does not exist, make record
     else:
       if cur_user['song'] is not None:
-        params = (cur_user['user'], cur_user['song'],
+        params = (cur_user['user'], server, cur_user['song'],
                   datetime.now(), 1)
         curs.execute('''INSERT INTO users
-                        (username, last_song, last_date, times_sung)
-                        VALUES(?,?,?,?)''', params)
+                        (username, server, last_song, last_date, times_sung)
+                        VALUES(?,?,?,?,?)''', params)
         db_conn.commit()
       else:
-        params = (cur_user['user'], datetime.now(), 1)
+        params = (cur_user['user'], server, datetime.now(), 1)
         try:
           curs.execute('''INSERT INTO users
-                          (username, last_date, times_sung)
-                          VALUES(?,?,?)''', params)
+                          (username, server, last_date, times_sung)
+                          VALUES(?,?,?,?)''', params)
           db_conn.commit()
         except sqlite3.Error as e:
           print('An error has occured: {}', e.args[0])
@@ -237,27 +270,30 @@ class KaraokeBotCommands():
     # Now update song record
     if cur_user['song'] is not None:
       # Check if it exists
-      params = (cur_user['song'], cur_user['user'])
+      params = (cur_user['song'], cur_user['user'], server)
       curs.execute('''SELECT count(1) FROM songs
-                      WHERE song_name = ? AND username = ?''', params)
+                      WHERE song_name = ?
+                        AND username = ?
+                        AND server = ?''', params)
       count = curs.fetchone()[0]
 
       # If it exists, update
       if count is not 0:
-        params = (datetime.now(), cur_user['song'], cur_user['user'])
+        params = (datetime.now(), cur_user['song'], cur_user['user'], server)
         curs.execute('''UPDATE songs
                            SET times_sung = times_sung + 1,
                                last_sung = ?
                         WHERE song_name = ?
-                          AND username = ?''', params)
+                          AND username = ?
+                          AND server = ?''', params)
         db_conn.commit()
       # Song does not exist in records, insert record
       else:
-        params = (cur_user['song'], cur_user['user'],
-                  datetime.now(), 1)
+        params = (cur_user['song'], server, cur_user['user'],
+                  1, datetime.now())
         curs.execute('''INSERT INTO songs
-                        (song_name, username, times_sung, last_sung)
-                        VALUES (?,?,?,?)''', params)
+                        (song_name, server, username, times_sung, last_sung)
+                        VALUES (?,?,?,?,?)''', params)
         db_conn.commit()
 
     # Commit database changes then close
@@ -280,7 +316,8 @@ class KaraokeBotCommands():
 
       embed.add_field(name='On Deck', value=on_deck_desc)
 
-    embed.add_field(name='Current Queue', value=make_queue_string(self.queue),
+    embed.add_field(name='Current Queue',
+                    value=make_queue_string(self.queue[server][channel]),
                     inline=False)
 
     await ctx.send(embed=embed)
@@ -291,16 +328,25 @@ class KaraokeBotCommands():
   @commands.command(pass_context=True)
   @commands.has_role('Mod')
   async def skipTop(self, ctx, user: str):
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
     # Check if that user is in the queue
     user_cutting = None
-    for item in self.queue:
+    for item in self.queue[server][channel]:
       if item['user'] == user:
         user_cutting = item
         break
 
     if user_cutting is not None:
-      self.queue.remove(item)
-      self.queue = [item] + self.queue
+      self.queue[server][channel].remove(item)
+      self.queue[server][channel] = [item] + self.queue[server][channel]
       desc = '{} cut to the front of the line!'.format(user)
     else:
       desc = '''{} is not in the queue.
@@ -309,7 +355,8 @@ class KaraokeBotCommands():
     # Return Response
     embed = discord.Embed(title='Skipping to the Top', description=desc,
                       color=self.embed_color)
-    embed.add_field(name='Current Queue', value=make_queue_string(self.queue),
+    embed.add_field(name='Current Queue',
+                    value=make_queue_string(self.queue[server][channel]),
                     inline=False)
 
     await ctx.send(embed=embed)
@@ -355,18 +402,27 @@ class KaraokeBotCommands():
   @commands.command(pass_context=True)
   @commands.has_role('Mod')
   async def cut(self, ctx, pos_to_cut: int):
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
     # First check that the position is in the queue
-    queue_len = len(self.queue)
+    queue_len = len(self.queue[server][channel])
     if pos_to_cut - 1 > queue_len or pos_to_cut - 1 < 0:
       # Report Error
       desc = '{} is out of bounds! Queue length is {}'.format(
-        pos_to_cut, len(self.queue))
+        pos_to_cut, len(self.queue[server][channel]))
       embed = discord.Embed(title='Cut from queue', description=desc,
                         color=self.embed_color)
     # If we are in the queue, cut that position
     else:
       # Cut user
-      cut_user = self.queue[pos_to_cut - 1]
+      cut_user = self.queue[server][channel][pos_to_cut - 1]
       self.queue.remove(cut_user)
 
       # Then report back
@@ -381,9 +437,20 @@ class KaraokeBotCommands():
   # Displays the current queue
   @commands.command(pass_context=True)
   async def showQueue(self, ctx):
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
     # Simply return the queue
     embed = discord.Embed(title='Current Queue',
-                          description=make_queue_string(self.queue),
+                          description=make_queue_string(
+                            self.queue[server][channel]
+                          ),
                           color=self.embed_color)
 
     await ctx.send(embed=embed)
@@ -393,8 +460,17 @@ class KaraokeBotCommands():
   # Clears the queue
   @commands.command(pass_context=True)
   async def clear(self, ctx):
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
     # Clear queue
-    self.queue = []
+    self.queue[server][channel] = []
 
     # Return
     embed = discord.Embed(title='Clear Queue',
@@ -408,18 +484,27 @@ class KaraokeBotCommands():
   # Adds author of message to the queue. Song can also be added
   @commands.command(pass_context=True)
   async def addMe(self, ctx, song: str=None):
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
     # Get user
     user = ctx.message.author.name
 
     # Add person to self.queue, if they aren't already in line
     in_queue = False
-    for item in self.queue:
+    for item in self.queue[server][channel]:
       if item['user'] == user:
         in_queue = True
         break
 
     if not in_queue:
-      self.queue.append({'user': user, 'song': song})
+      self.queue[server][channel].append({'user': user, 'song': song})
 
     # Make response
     if not in_queue:
@@ -433,7 +518,8 @@ class KaraokeBotCommands():
 
     embed = discord.Embed(title='Adding User', description=description,
                           color=self.embed_color)
-    embed.add_field(name='Current Order', value=make_queue_string(self.queue),
+    embed.add_field(name='Current Order',
+                    value=make_queue_string(self.queue[server][channel]),
                     inline=False)
 
     await ctx.send(embed=embed)
@@ -443,19 +529,29 @@ class KaraokeBotCommands():
   # Removes author from queue
   @commands.command(pass_context=True)
   async def removeMe(self, ctx):
+    # Get context of message
+    server = ctx.message.channel.guild.id
+    if server not in self.queue:
+      self.queue[server] = {}
+
+    channel = ctx.message.channel.id
+    if channel not in self.queue[server]:
+      self.queue[server][channel] = []
+
     # Get User
     user = ctx.message.author.name
 
     # If the user is in the queue, remove them
-    for item in self.queue:
+    for item in self.queue[server][channel]:
       if item['user'] == user:
-        self.queue.remove(item)
+        self.queue[server][channel].remove(item)
 
     # Create response
     description = 'Removing user {} from queue'.format(user)
     embed = discord.Embed(title='Removing user', description=description,
                           color=self.embed_color)
-    embed.add_field(name='Current Order', value=make_queue_string(self.queue),
+    embed.add_field(name='Current Order',
+                    value=make_queue_string(self.queue[server][channel]),
                     inline=False)
 
     await ctx.send(embed=embed)

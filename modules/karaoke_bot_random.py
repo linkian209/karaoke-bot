@@ -13,7 +13,6 @@ class KaraokeBotRandom():
   def __init__(self, bot):
     # The bot
     self.bot = bot
-    self.queue = []
 
     # Logging
     self.log = logging.getLogger(__name__)
@@ -40,6 +39,17 @@ class KaraokeBotRandom():
 
     await ctx.send(file=discord.File(filename, 'clap.gif'))
   # End !clap
+
+  # !suhDude
+  # Assa Dude!
+  @commands.command(pass_context=True)
+  @commands.has_role('Mod')
+  async def suhDude(self, ctx):
+    # Suh Dude
+    filename = '{}/gifs/sah_dude/sah_dude.gif'.format(os.getcwd())
+
+    await ctx.send(file=discord.File(filename, 'suhdude.gif'))
+  # End !sudDude
 
   # !applause
   # Send applause!

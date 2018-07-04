@@ -3,10 +3,9 @@ import discord
 import logging.config
 import getopt
 import sys
-import sqlite3
+import os
 import signal
 import datetime
-import asyncio
 import configparser
 from discord.ext import commands
 from karaoke_bot_funcs import *
@@ -21,6 +20,8 @@ def main():
   # Set defaults
   command_prefix = '!'
   token = None
+
+  print('Karaoke-Bot Starting up...\nReading Config...')
 
   # First parse config
   config = configparser.ConfigParser()
@@ -39,6 +40,7 @@ def main():
           sys.exit(2)
 
   # Command line arguments trump config
+  print('Parsing Command Line Options...')
   # Get started
   try:
     flags = 'ht:c:'
@@ -69,22 +71,34 @@ def main():
     usage()
     sys.exit(2)
 
+  # Set up database
+  print('Configuring Database...')
+  if not os.path.isfile('karaokebot.sqlt'):
+    print('Database does not exist! Creating...')
+    configure_database()
+
   # Set up logging
+  print('Setting Up Loggers...')
   logger = logging.config.fileConfig('logging.conf')
 
   # Setup bot commands
-  bot = commands.Bot(command_prefix=command_prefix)
+  print('Configuring Bot...')
+  bot = commands.Bot(command_prefix=command_prefix,
+                     activity=discord.Game('{}help'.format(command_prefix)))
+  print('  - Command Prefix: {}'.format(command_prefix))
 
   # Load in bot extensions
   for extension in startup_extensions:
     try:
       bot.load_extension(extension)
+      print('  - Loaded extension {}'.format(extension))
     except Exception as e:
       error = '{}: {}'.format(type(e).__name__, e)
       print('Failed to load extension {}\n{}'.format(extension, error))
 
 
-  # Create event loop
+  # Create event loop and run!
+  print('Starting Bot!')
   bot.run(token)
 
   # Once we get a signal to quit, logout then exit!

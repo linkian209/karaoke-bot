@@ -1,8 +1,9 @@
 import logging
+import sqlite3
 
 # Utility Functions
 
-# Usage
+# usage
 # Prints script arguments
 def usage():
   print(
@@ -16,6 +17,8 @@ def usage():
     '''
 )
 
+# make_queue_string
+# Returns a markdown string for the inputted queue
 def make_queue_string(queue):
   # Loop through queue and make a markdown string
   cur_queue = ''
@@ -35,3 +38,32 @@ def make_queue_string(queue):
   return cur_queue
 
 # End Utility Functions
+
+# configure_database
+# Creates sqlite3 database for Karaoke Bot to use
+def configure_database():
+  # Open connection to file
+  db_conn = sqlite3.connect('karaokebot.sqlt')
+  curs = db_conn. cursor()
+
+  # Create the users table
+  curs.execute('''CREATE TABLE users (
+                    username   text not null,
+                    server     number not null,
+                    last_song  test,
+                    last_date  date,
+                    times_sung number,
+                    primary key(username, server))''')
+
+  # Create the songs table
+  curs.execute('''CREATE TABLE songs (
+                    song_name  text not null,
+                    username   text not null,
+                    server     number not null,
+                    times_sung real,
+                    last_sung  date,
+                    primary key(song_name, username, server))''')
+
+  # Done!
+  db_conn.commit()
+  db_conn.close()
