@@ -1,8 +1,12 @@
-# Ignore the sql table and log file
+# Ignore the sql table and log file as well as the virtualenv
 *.sqlt
 *.txt
 *.conf
 screen*
+*.old
+env/
+__pycache__/
+*/__pycache__/
 
 # But not requirements.txt or the logging conf
 !requirements.txt
