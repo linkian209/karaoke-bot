@@ -209,7 +209,7 @@ class KaraokeBotCommands():
     # Get current user and on deck user
     cur_user = self.queue[server][channel][0]
     on_deck = None
-    if len(self.queue) > 1:
+    if len(self.queue[server][channel]) > 1:
       on_deck = self.queue[server][channel][1]
 
     # Pop from self.queue

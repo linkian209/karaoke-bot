@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import aiohttp
 import discord
 import logging.config
 import getopt
@@ -83,7 +84,8 @@ def main():
 
   # Setup bot commands
   print('Configuring Bot...')
-  bot = commands.Bot(command_prefix=command_prefix,
+  bot = commands.Bot(connector=aiohttp.TCPConnector(verify_ssl=False),
+                     command_prefix=command_prefix,
                      activity=discord.Game('{}help'.format(command_prefix)))
   print('  - Command Prefix: {}'.format(command_prefix))
 

@@ -1,5 +1,5 @@
 # Karaoke Discord Bot
-A bot for running a karaoke queue in a Discord Server using Python 3.5
+A bot for running a karaoke queue in a Discord Server using Python 3.7
 
 # SQLite
 Since I designed this bot to run on a Raspberry Pi, I have decided to use SQLite3. This is fine because Python has tight integration with it... and nothing else works out of the box.
@@ -20,4 +20,6 @@ The systemctl service does not provide command line arguments. You can utilize t
 
 # Requirements
 * discord.py
-  * pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
+
+# Updates
+I was forced to update the version of discord.py, and thus the python version, to fix an issue with reactions breaking the bot. I have refactored the code to now work inside a virtualenv, please take note.
