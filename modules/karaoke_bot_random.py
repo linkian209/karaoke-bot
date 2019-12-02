@@ -7,7 +7,7 @@ from karaoke_bot_funcs import *
 
 
 # Random Commands for the Karaoke Bot
-class KaraokeBotRandom():
+class KaraokeBotRandom(commands.Cog):
   """ KaraokeBot Random Cog"""
   # Initialization function
   def __init__(self, bot):

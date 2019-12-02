@@ -10,7 +10,7 @@ from karaoke_bot_funcs import *
 database_name = 'karaokebot.sqlt'
 
 # Commands for the Karaoke Bot
-class KaraokeBotCommands():
+class KaraokeBotCommands(commands.Cog):
   """ KaraokeBot Commands Cog"""
   # Initialization function
   def __init__(self, bot):

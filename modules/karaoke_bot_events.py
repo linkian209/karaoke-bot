@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class KaraokeBotEvents():
+class KaraokeBotEvents(commands.Cog):
   # Initialize
   def __init__(self, bot):
     self.bot = bot
